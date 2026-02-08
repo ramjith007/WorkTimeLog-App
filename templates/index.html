@@ -6,60 +6,59 @@
     <title>My Time Zone - Time Tracker</title>
     <style>
         :root {
-            /* Light mode colors - Modern */
-            --bg-primary: #f8f9fa;
+            /* Futuristic Light Theme (neon green accents) */
+            --bg-primary: #f6fff9;
             --bg-secondary: #ffffff;
-            --bg-tertiary: #f0f2f5;
-            --bg-form: #e8f4f8;
-            --text-primary: #1a1a1a;
-            --text-secondary: #3d3d3d;
-            --text-tertiary: #626262;
-            --border-color: #e0e0e0;
-            --button-primary: #0084ff;
-            --button-success: #31a24c;
-            --button-success-hover: #2d8f41;
-            --button-success-active: #247d38;
-            --button-danger: #f02849;
-            --button-danger-hover: #d91f38;
-            --button-warning: #ffb81d;
-            --button-warning-hover: #e6a600;
-            --button-secondary: #65676b;
-            --button-secondary-hover: #50595f;
-            --shadow: 0 1px 3px rgba(0,0,0,0.08);
-            --shadow-lg: 0 4px 12px rgba(0,0,0,0.12);
-            --table-row-hover: #f5f7fa;
-            --stat-border: #0084ff;
-            --dev-positive: #31a24c;
-            --dev-negative: #f02849;
-            --header-bg: #ffffff;
+            --bg-tertiary: #effffb;
+            --bg-form: #e8fff2;
+            --text-primary: #062b20;
+            --text-secondary: #0b5b46;
+            --text-tertiary: #2b7a61;
+            --border-color: rgba(45,212,191,0.25);
+            --button-primary: #2dd4bf;
+            --button-success: #10b981;
+            --button-success-hover: #059669;
+            --button-success-active: #047857;
+            --button-danger: #ff3860;
+            --button-danger-hover: #e02e52;
+            --button-warning: #ffb84d;
+            --button-secondary: #6ee7b7;
+            --shadow: 0 6px 24px rgba(45,212,191,0.08);
+            --shadow-lg: 0 12px 48px rgba(45,212,191,0.12);
+            --table-row-hover: rgba(45,212,191,0.04);
+            --stat-border: #2dd4bf;
+            --dev-positive: #10b981;
+            --dev-negative: #ff3860;
+            --header-bg: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(240,255,250,0.6));
+            --neon-glow: 0 0 12px rgba(45,212,191,0.6);
+            --neon-glow-lg: 0 0 30px rgba(45,212,191,0.35);
         }
-        
+
         html.dark-mode {
-            --bg-primary: #121212;
-            --bg-secondary: #1e1e1e;
-            --bg-tertiary: #2a2a2a;
-            --bg-form: #1f2937;
-            --text-primary: #e8e8e8;
-            --text-secondary: #c9c9c9;
-            --text-tertiary: #9ca3af;
-            --border-color: #3f3f3f;
-            --button-primary: #1f9aed;
-            --button-success: #3dd270;
-            --button-success-hover: #35c063;
-            --button-success-active: #2fa855;
-            --button-danger: #f02849;
-            --button-danger-hover: #d91f38;
-            --button-warning: #ffb81d;
-            --button-warning-hover: #e6a600;
-            --button-secondary: #6b7280;
-            --button-secondary-hover: #808a96;
-            --shadow: 0 1px 3px rgba(0,0,0,0.3);
-            --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
-            --table-row-hover: #262626;
-            --stat-border: #1f9aed;
-            --dev-positive: #3dd270;
-            --dev-negative: #f02849;
-            --header-bg: #1e1e1e;
+            /* Futuristic Dark Theme (pinkish violet accents) */
+            --bg-primary: #07060a;
+            --bg-secondary: #0b0710;
+            --bg-tertiary: #12081a;
+            --bg-form: #13101f;
+            --text-primary: #ffdff6;
+            --text-secondary: #ffb5f0;
+            --text-tertiary: #ff89dd;
+            --border-color: rgba(221,51,250,0.18);
+            --button-primary: #dd33fa;
+            --button-success: #ec4899;
+            --button-success-hover: #d946ef;
+            --button-danger: #ff3366;
+            --button-warning: #ffd24d;
+            --button-secondary: #f472b6;
+            --shadow: 0 10px 40px rgba(221,51,250,0.12);
+            --shadow-lg: 0 18px 60px rgba(221,51,250,0.18);
+            --table-row-hover: rgba(221,51,250,0.03);
+            --stat-border: #dd33fa;
+            --dev-positive: #ec4899;
+            --dev-negative: #ff3366;
+            --header-bg: linear-gradient(90deg, rgba(10,6,18,0.85), rgba(20,8,30,0.7));
+            --neon-glow: 0 0 18px rgba(221,51,250,0.75);
+            --neon-glow-lg: 0 0 48px rgba(221,51,250,0.45);
         }
         
         * {
@@ -69,13 +68,14 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: var(--bg-primary);
+            font-family: 'Courier New', Courier, monospace;
+            background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent), var(--bg-primary);
             padding: 20px;
             padding-top: 100px;
             line-height: 1.6;
             color: var(--text-primary);
-            transition: background-color 0.3s, color 0.3s;
+            transition: background 0.35s ease, color 0.25s ease;
+            -webkit-font-smoothing: antialiased;
         }
         
         .header {
@@ -83,13 +83,15 @@
             top: 0;
             left: 0;
             right: 0;
-            background-color: var(--header-bg);
-            box-shadow: var(--shadow-lg);
-            padding: 15px 20px;
+            background: var(--header-bg);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            box-shadow: var(--neon-glow-lg), 0 6px 20px rgba(0,0,0,0.35);
+            padding: 18px 22px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 100;
+            z-index: 120;
+            backdrop-filter: blur(6px) saturate(140%);
         }
         
         .header-title {
@@ -222,13 +224,15 @@
         }
         
         .container {
-            max-width: 900px;
+            max-width: 980px;
             margin: 0 auto;
-            background-color: var(--bg-secondary);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+            padding: 34px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-lg), inset 0 0 40px rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,0.04);
+            animation: containerBorderGlow 3.2s ease-in-out infinite;
+            transform: translateZ(0);
         }
         
         h1 {
