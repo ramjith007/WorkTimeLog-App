@@ -208,6 +208,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
         .accent-dot {
@@ -219,6 +220,20 @@
             box-shadow: 0 0 8px rgba(0,0,0,0.25);
             border: 1px solid rgba(255,255,255,0.2);
             vertical-align: middle;
+        }
+
+        .theme-toggle input[type="color"]{
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            opacity: 0;
+            cursor: pointer;
         }
         
         .theme-toggle:hover {
@@ -560,15 +575,15 @@
         </div>
         <div class="header-datetime" id="current-datetime"></div>
         <div class="theme-toggle-container" style="position:relative;">
-            <button class="theme-toggle active" id="light-theme-btn" onclick="setTheme('light')" title="Light Mode">☀️
-                <span class="accent-dot" id="accent-dot-light"></span>
+            <button class="theme-toggle active" id="light-theme-btn" onclick="setTheme('light')" title="Light Mode">
+                ☀️ <span class="accent-dot" id="accent-dot-light"></span>
+                <input type="color" id="accent-light-picker" title="Accent for Light Theme" aria-label="Light accent picker">
             </button>
-            <input type="color" id="accent-light-picker" title="Accent for Light Theme" style="position:absolute;left:-9999px;">
 
-            <button class="theme-toggle" id="dark-theme-btn" onclick="setTheme('dark')" title="Dark Mode">🌙
-                <span class="accent-dot" id="accent-dot-dark"></span>
+            <button class="theme-toggle" id="dark-theme-btn" onclick="setTheme('dark')" title="Dark Mode">
+                🌙 <span class="accent-dot" id="accent-dot-dark"></span>
+                <input type="color" id="accent-dark-picker" title="Accent for Dark Theme" aria-label="Dark accent picker">
             </button>
-            <input type="color" id="accent-dark-picker" title="Accent for Dark Theme" style="position:absolute;left:-9999px;">
         </div>
     </div>
     
