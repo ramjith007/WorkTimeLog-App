@@ -123,6 +123,14 @@ def get_entries_for_month(year=None, month=None):
     
     return entries, month_start, month_end
 
+def add_months(source_date, months):
+    """Add months to a date (months can be negative)"""
+    month = source_date.month - 1 + months
+    year = source_date.year + month // 12
+    month = month % 12 + 1
+    day = min(source_date.day, (datetime(year, month % 12 + 1, 1) - timedelta(days=1)).day)
+    return datetime(year, month, day).date()
+
 def entry_exists(date_str):
     """Check if entry already exists for date"""
     conn = get_db()
@@ -136,12 +144,23 @@ def entry_exists(date_str):
 def index():
     """Display main page with current week and month data"""
     today = datetime.now().date()
-    
-    # Get current week entries
-    week_entries, week_start, week_end = get_entries_for_week(today)
-    
-    # Get current month entries
-    month_entries, month_start, month_end = get_entries_for_month()
+
+    # read offsets from query params (can be negative for previous)
+    try:
+        week_offset = int(request.args.get('week_offset', '0'))
+    except ValueError:
+        week_offset = 0
+    try:
+        month_offset = int(request.args.get('month_offset', '0'))
+    except ValueError:
+        month_offset = 0
+
+    # Compute target dates based on offsets
+    target_week_date = today + timedelta(weeks=week_offset)
+    week_entries, week_start, week_end = get_entries_for_week(target_week_date)
+
+    target_month_date = add_months(today, month_offset)
+    month_entries, month_start, month_end = get_entries_for_month(target_month_date.year, target_month_date.month)
     
     # Calculate weekly totals
     weekly_total_hours = 0
@@ -173,19 +192,22 @@ def index():
         'today': today.isoformat(),
         'week_start': week_start.isoformat(),
         'week_end': week_end.isoformat(),
-        'week_number': today.isocalendar()[1],
-        'week_year': today.isocalendar()[0],
+        'week_number': target_week_date.isocalendar()[1],
+        'week_year': target_week_date.isocalendar()[0],
+        'week_offset': week_offset,
+        'month_offset': month_offset,
         'week_entries': week_data,
         'weekly_total_hours': weekly_total_hours,
         'weekly_total_deviation': weekly_total_deviation,
         'monthly_total_hours': round(monthly_total_hours, 2),
         'monthly_total_deviation': monthly_total_deviation,
-        'month_str': today.strftime('%B %Y'),
-        'month_number': today.month,
-        'month_year': today.year,
-        'month_full': today.strftime('%B'),
-        'total_days_in_month': (datetime(today.year, today.month if today.month < 12 else 1, 1) - timedelta(days=1)).day if today.month > 1 else datetime(today.year, 12, 31).day,
-        'current_day_of_month': today.day
+        'month_str': target_month_date.strftime('%B %Y'),
+        'month_number': target_month_date.month,
+        'month_year': target_month_date.year,
+        'month_full': target_month_date.strftime('%B'),
+        'total_days_in_month': (datetime(target_month_date.year, target_month_date.month % 12 + 1, 1) - timedelta(days=1)).day,
+        'current_day_of_month': target_month_date.day,
+        'month_range': f"{month_start.day} {month_start.strftime('%B')} to {month_end.day} {month_end.strftime('%B')}"
     }
     
     return render_template('index.html', **context)
