@@ -972,7 +972,7 @@
                 lightBtn.classList.add('active');
                 darkBtn.classList.remove('active');
             }
-            // Re-apply stored accents after switching theme
+            // Re-apply stored accents after switching theme (updates hue rotation)
             if (typeof applyStoredAccents === 'function') applyStoredAccents();
         }
         
@@ -1139,19 +1139,20 @@
 
                 input[type="date"]::-webkit-calendar-picker-indicator,
                 input[type="time"]::-webkit-calendar-picker-indicator { 
-                    filter: invert(0) brightness(0.8) sepia(0.8) hue-rotate(var(--hue-rotation, 0deg)) saturate(1.2);
                     cursor: pointer;
                     opacity: 0.85;
+                    filter: invert(1) brightness(0.9) hue-rotate(var(--hue-rotation, 0deg)) saturate(1.3);
                 }
 
                 input[type="date"]::-webkit-calendar-picker-indicator:hover,
                 input[type="time"]::-webkit-calendar-picker-indicator:hover { 
                     opacity: 1;
-                    filter: invert(0) brightness(1.0) sepia(1.0) hue-rotate(var(--hue-rotation, 0deg)) saturate(1.4);
+                    filter: invert(1) brightness(1.1) hue-rotate(var(--hue-rotation, 0deg)) saturate(1.5);
                 }
 
                 input[type="date"], input[type="time"] {
                     accent-color: var(--f-accent);
+                    caret-color: var(--f-accent);
                 }
 
                 button, .theme-toggle{ border-color: var(--f-accent) !important; }
@@ -1211,8 +1212,13 @@
                 // Update hue rotation for picker icons
                 const isDark = document.documentElement.classList.contains('dark-mode');
                 const accentHex = isDark ? darkHex : lightHex;
-                const hueRot = hexToHue(accentHex);
-                document.documentElement.style.setProperty('--hue-rotation', hueRot + 'deg');
+                try {
+                    const hueRot = hexToHue(accentHex);
+                    document.documentElement.style.setProperty('--hue-rotation', hueRot + 'deg');
+                    document.documentElement.style.setProperty('--f-accent', accentHex);
+                } catch(e) {
+                    console.warn('Failed to apply hue rotation:', e);
+                }
             }
 
             function hexToHue(hex) {
