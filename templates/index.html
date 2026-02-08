@@ -316,7 +316,7 @@
         }
         
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             display: grid;
             grid-template-columns: 150px 1fr;
             align-items: center;
@@ -324,28 +324,40 @@
         }
         
         label {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-primary);
             font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         input[type="date"],
         input[type="time"] {
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: inherit;
-            background-color: var(--bg-secondary);
+            padding: 12px 14px;
+            border: 2px solid rgba(var(--f-accent-rgb, 45,212,191), 0.25);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'Courier New', Courier, monospace;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(var(--f-accent-rgb, 45,212,191), 0.02));
             color: var(--text-primary);
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 42px;
+        }
+        
+        input[type="date"]:hover,
+        input[type="time"]:hover {
+            border-color: rgba(var(--f-accent-rgb, 45,212,191), 0.5);
+            box-shadow: 0 4px 12px rgba(var(--f-accent-rgb, 45,212,191), 0.08);
         }
         
         input[type="date"]:focus,
         input[type="time"]:focus {
             outline: none;
             border-color: var(--button-primary);
-            box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.1);
+            box-shadow: 0 0 18px rgba(var(--f-accent-rgb, 45,212,191), 0.25), inset 0 0 8px rgba(var(--f-accent-rgb, 45,212,191), 0.04);
+            background: linear-gradient(135deg, rgba(var(--f-accent-rgb, 45,212,191), 0.04), rgba(var(--f-accent-rgb, 45,212,191), 0.02));
         }
         
         .button-group {
@@ -454,13 +466,28 @@
         
         .modal-form-group input {
             width: 100%;
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: Arial, sans-serif;
-            background-color: var(--bg-secondary);
+            padding: 12px 14px;
+            border: 2px solid rgba(var(--f-accent-rgb, 221,51,250), 0.25);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'Courier New', Courier, monospace;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(var(--f-accent-rgb, 221,51,250), 0.02));
             color: var(--text-primary);
+            transition: all 0.3s ease;
+            cursor: text;
+        }
+
+        .modal-form-group input:hover {
+            border-color: rgba(var(--f-accent-rgb, 221,51,250), 0.4);
+            box-shadow: 0 4px 12px rgba(var(--f-accent-rgb, 221,51,250), 0.08);
+        }
+
+        .modal-form-group input:focus {
+            outline: none;
+            border-color: var(--button-primary);
+            box-shadow: 0 0 18px rgba(var(--f-accent-rgb, 221,51,250), 0.25), inset 0 0 8px rgba(var(--f-accent-rgb, 221,51,250), 0.04);
+            background: linear-gradient(135deg, rgba(var(--f-accent-rgb, 221,51,250), 0.04), rgba(var(--f-accent-rgb, 221,51,250), 0.02));
         }
         
         .modal-buttons {
