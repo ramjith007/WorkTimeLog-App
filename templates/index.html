@@ -235,6 +235,34 @@
             opacity: 0;
             cursor: pointer;
         }
+
+        .nav-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            color: var(--text-tertiary);
+            background: transparent;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(var(--f-accent-rgb, 0,0,0), 0.06);
+        }
+        .nav-btn.active {
+            font-weight: 800;
+            color: var(--text-primary);
+            background: rgba(var(--f-accent-rgb, 45,212,191), 0.08);
+            border-color: var(--f-accent);
+        }
         
         .theme-toggle:hover {
             background-color: var(--button-primary);
@@ -618,7 +646,14 @@
         </div>
         
         <!-- Current Week Section -->
-        <h2>📊 Week #{{ week_number }} - Time Entries</h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <h2 style="margin:0;">📊 Week #{{ week_number }} - Time Entries</h2>
+                <div class="nav-controls">
+                    <a id="week-prev-btn" class="nav-btn" href="/?week_offset={{ week_offset - 1 }}&month_offset={{ month_offset }}" title="Previous week">◀</a>
+                    <a id="week-current-btn" class="nav-btn {% if week_offset == 0 %}active{% endif %}" href="/?week_offset=0&month_offset={{ month_offset }}" title="Current week">This Week</a>
+                    <a id="week-next-btn" class="nav-btn" href="/?week_offset={{ week_offset + 1 }}&month_offset={{ month_offset }}" title="Next week">▶</a>
+                </div>
+        </div>
         <div class="week-info">
             <strong>Week {{ week_number }} of {{ week_year }}</strong> | {{ week_start }} to {{ week_end }}
         </div>
@@ -692,9 +727,16 @@
         </div>
         
         <!-- Monthly Statistics -->
-        <h2>📈 {{ month_full }} {{ month_year }} Summary</h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <h2 style="margin:0;">📈 {{ month_full }} {{ month_year }} Summary</h2>
+            <div class="nav-controls">
+                <a id="month-prev-btn" class="nav-btn" href="/?month_offset={{ month_offset - 1 }}&week_offset={{ week_offset }}" title="Previous month">◀</a>
+                <a id="month-current-btn" class="nav-btn {% if month_offset == 0 %}active{% endif %}" href="/?month_offset=0&week_offset={{ week_offset }}" title="Current month">This Month</a>
+                <a id="month-next-btn" class="nav-btn" href="/?month_offset={{ month_offset + 1 }}&week_offset={{ week_offset }}" title="Next month">▶</a>
+            </div>
+        </div>
         <div class="month-info">
-            <strong>{{ month_full }} {{ month_year }}</strong> | Day {{ current_day_of_month }} of {{ total_days_in_month }}
+            <strong>{{ month_full }} {{ month_year }}</strong> | {{ month_range }}
         </div>
         <div class="statistics">
             <div class="stats-row">
@@ -959,6 +1001,23 @@
         setInterval(updateClock, 1000);
     </script>
     <script>
+        // Ensure nav buttons show active state reliably based on URL params
+        document.addEventListener('DOMContentLoaded', function(){
+            try{
+                const params = new URLSearchParams(window.location.search);
+                const wo = parseInt(params.get('week_offset')||'0',10);
+                const mo = parseInt(params.get('month_offset')||'0',10);
+                const weekCurrent = document.getElementById('week-current-btn');
+                const monthCurrent = document.getElementById('month-current-btn');
+                if(weekCurrent){
+                    if(wo === 0) weekCurrent.classList.add('active'); else weekCurrent.classList.remove('active');
+                }
+                if(monthCurrent){
+                    if(mo === 0) monthCurrent.classList.add('active'); else monthCurrent.classList.remove('active');
+                }
+            }catch(e){console.warn('nav active check failed', e)}
+        });
+
         /* Per-theme futuristic palette generator and overrides */
         (function(){
             function hexToRgb(hex) {
@@ -977,26 +1036,91 @@
             }
 
             function buildCss(lightHex,darkHex){
-                const [lr,lg,lb]=hexToRgb(lightHex); const [dr,dg,db]=hexToRgb(darkHex);
-                const lightGlow = `rgba(${lr},${lg},${lb},0.6)`;
-                const darkGlow = `rgba(${dr},${dg},${db},0.75)`;
-                const css = `:root{ --f-accent:${lightHex}; --f-accent-rgb:${lr},${lg},${lb}; }
-                html.dark-mode{ --f-accent:${darkHex}; --f-accent-rgb:${dr},${dg},${db}; }
-                /* override core elements to follow accent */
-                .header{ border-bottom-color: var(--f-accent) !important; box-shadow: 0 6px 18px rgba(var(--f-accent-rgb),0.12) !important; }
-                .header-title span{ color: var(--f-accent) !important; }
-                .container, .form-section, table, .week-info{ border-color: var(--f-accent) !important; }
+                const [lr,lg,lb]=hexToRgb(lightHex);
+                const [dr,dg,db]=hexToRgb(darkHex);
+                const lightAccentDark = adjustColor(lightHex, -12);
+                const lightAccentLight = adjustColor(lightHex, 18);
+                const darkAccentDark = adjustColor(darkHex, -12);
+                const darkAccentLight = adjustColor(darkHex, 18);
+
+                const css = `
+                :root{
+                    --f-accent: ${lightHex};
+                    --f-accent-rgb: ${lr},${lg},${lb};
+                    --f-accent-dark: ${lightAccentDark};
+                    --f-accent-light: ${lightAccentLight};
+                    --f-neon: rgba(${lr},${lg},${lb},0.12);
+                    --f-neon-glow: 0 0 18px rgba(${lr},${lg},${lb},0.55);
+                    --f-neon-glow-lg: 0 0 40px rgba(${lr},${lg},${lb},0.22);
+                    --f-gradient: linear-gradient(135deg, rgba(${lr},${lg},${lb},0.12), rgba(${lr},${lg},${lb},0.02));
+                }
+                html.dark-mode{
+                    --f-accent: ${darkHex};
+                    --f-accent-rgb: ${dr},${dg},${db};
+                    --f-accent-dark: ${darkAccentDark};
+                    --f-accent-light: ${darkAccentLight};
+                    --f-neon: rgba(${dr},${dg},${db},0.16);
+                    --f-neon-glow: 0 0 30px rgba(${dr},${dg},${db},0.7);
+                    --f-neon-glow-lg: 0 0 60px rgba(${dr},${dg},${db},0.32);
+                    --f-gradient: linear-gradient(135deg, rgba(${dr},${dg},${db},0.12), rgba(${dr},${dg},${db},0.04));
+                }
+
+                /* Enhanced futuristic effects */
+                body {
+                    background-image: radial-gradient(800px 300px at 10% 10%, rgba(${lr},${lg},${lb},0.04), transparent), radial-gradient(600px 260px at 90% 80%, rgba(${dr},${dg},${db},0.03), transparent), var(--bg-primary);
+                }
+
+                .header{
+                    border-bottom-color: var(--f-accent) !important;
+                    box-shadow: var(--f-neon-glow-lg), 0 6px 24px rgba(var(--f-accent-rgb),0.12) !important;
+                }
+
+                .header-title span{ color: var(--f-accent) !important; text-shadow: 0 0 6px rgba(var(--f-accent-rgb),0.25); }
+
+                .analog-clock{ border-color: var(--f-accent) !important; box-shadow: var(--f-neon-glow) !important; }
+
+                .clock-hand.hour, .clock-hand.minute { background-color: var(--f-accent) !important; box-shadow: 0 0 6px rgba(var(--f-accent-rgb),0.65) !important; }
+
+                .container{ border-color: rgba(var(--f-accent-rgb),0.12) !important; box-shadow: 0 12px 48px rgba(var(--f-accent-rgb),0.06) !important; }
+
+                .form-section{ border-color: rgba(var(--f-accent-rgb),0.18) !important; box-shadow: inset 0 0 30px rgba(var(--f-accent-rgb),0.02) !important; }
+
+                table{ border-color: rgba(var(--f-accent-rgb),0.12) !important; box-shadow: 0 8px 24px rgba(var(--f-accent-rgb),0.04) !important; }
+
+                td{ border-bottom-color: rgba(var(--f-accent-rgb),0.08) !important; }
+
+                .week-info, .month-info{ border-top: 1px solid rgba(var(--f-accent-rgb),0.12) !important; padding-top: 8px !important; }
+
+                input[type="date"], input[type="time"], .modal-form-group input{ border-color: rgba(var(--f-accent-rgb),0.12) !important; box-shadow: 0 2px 8px rgba(var(--f-accent-rgb),0.03) !important; }
+                input[type="date"]:focus, input[type="time"]:focus, .modal-form-group input:focus{ box-shadow: 0 0 0 6px rgba(var(--f-accent-rgb),0.06); border-color: var(--f-accent); }
+
                 button, .theme-toggle{ border-color: var(--f-accent) !important; }
-                .btn-add{ background: linear-gradient(90deg, var(--f-accent), ${adjustColor(lightHex, -10)}) !important; color: #fff !important; box-shadow: 0 6px 20px rgba(var(--f-accent-rgb),0.35) !important; }
-                html.dark-mode .btn-add{ background: linear-gradient(90deg, var(--f-accent), ${adjustColor(darkHex, -10)}) !important; box-shadow: 0 8px 26px rgba(var(--f-accent-rgb),0.45) !important; }
-                .btn-delete{ background: transparent; border-bottom: 2px solid var(--f-accent) !important; }
-                .btn-edit{ background: transparent; border-bottom: 2px solid var(--f-accent) !important; }
-                h1, h2{ color: var(--f-accent) !important; }
-                h2{ border-bottom: 2px solid var(--f-accent) !important; }
-                table thead th{ background: linear-gradient(90deg, rgba(var(--f-accent-rgb),0.08), rgba(var(--f-accent-rgb),0.03)) !important; }
+
+                .btn-add{ background: linear-gradient(90deg, var(--f-accent), var(--f-accent-dark)) !important; color: #fff !important; box-shadow: 0 10px 36px rgba(var(--f-accent-rgb),0.22), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+                html.dark-mode .btn-add{ box-shadow: 0 12px 48px rgba(var(--f-accent-rgb),0.32), inset 0 1px 0 rgba(255,255,255,0.08) !important; }
+
+                .btn-delete, .btn-edit{ box-shadow: 0 4px 12px rgba(var(--f-accent-rgb),0.08) !important; }
+
+                .modal-content{ box-shadow: 0 20px 60px rgba(var(--f-accent-rgb),0.15) !important; }
+
+                .statistics{ box-shadow: 0 8px 24px rgba(var(--f-accent-rgb),0.04) !important; }
+
+                .nav-btn.active{ background: linear-gradient(90deg, rgba(var(--f-accent-rgb),0.06), rgba(var(--f-accent-rgb),0.03)); border-color: var(--f-accent); }
+
+                h1, h2{ color: var(--f-accent) !important; text-shadow: 0 0 8px rgba(var(--f-accent-rgb),0.12); }
+
+                h2{ border-bottom-color: var(--f-accent) !important; }
+
+                table thead th{ background: linear-gradient(90deg, rgba(var(--f-accent-rgb),0.10), rgba(var(--f-accent-rgb),0.03)) !important; box-shadow: inset 0 -3px 10px rgba(var(--f-accent-rgb),0.02), 0 2px 4px rgba(var(--f-accent-rgb),0.04) !important; border-bottom: 2px solid rgba(var(--f-accent-rgb),0.15) !important; }
                 tr:hover{ background: rgba(var(--f-accent-rgb),0.04) !important; }
+
+                .stat-item{ box-shadow: 0 8px 30px rgba(var(--f-accent-rgb),0.03), inset 0 1px 0 rgba(var(--f-accent-rgb),0.06) !important; border-left-color: var(--f-accent) !important; color: var(--text-primary); }
+
+                .accent-dot{ box-shadow: 0 0 12px rgba(var(--f-accent-rgb),0.45); border-color: rgba(255,255,255,0.12); }
+
                 a, .link{ color: var(--f-accent) !important; text-decoration: underline dotted var(--f-accent)  !important; }
                 `;
+
                 return css;
             }
 
