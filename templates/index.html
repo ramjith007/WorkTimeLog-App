@@ -209,6 +209,17 @@
             align-items: center;
             justify-content: center;
         }
+
+        .accent-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.2);
+            vertical-align: middle;
+        }
         
         .theme-toggle:hover {
             background-color: var(--button-primary);
@@ -548,15 +559,16 @@
             <span>My Time Zone</span>
         </div>
         <div class="header-datetime" id="current-datetime"></div>
-        <div class="theme-toggle-container">
-            <button class="theme-toggle active" id="light-theme-btn" onclick="setTheme('light')" title="Light Mode">☀️</button>
-            <button class="theme-toggle" id="dark-theme-btn" onclick="setTheme('dark')" title="Dark Mode">🌙</button>
-        </div>
-        <div class="accent-pickers" style="display:flex;gap:8px;align-items:center;margin-left:12px;">
-            <label for="accent-light-picker" style="font-size:12px;color:var(--text-tertiary);margin-right:4px;">Light</label>
-            <input type="color" id="accent-light-picker" title="Accent for Light Theme">
-            <label for="accent-dark-picker" style="font-size:12px;color:var(--text-tertiary);margin:0 4px 0 8px;">Dark</label>
-            <input type="color" id="accent-dark-picker" title="Accent for Dark Theme">
+        <div class="theme-toggle-container" style="position:relative;">
+            <button class="theme-toggle active" id="light-theme-btn" onclick="setTheme('light')" title="Light Mode">☀️
+                <span class="accent-dot" id="accent-dot-light"></span>
+            </button>
+            <input type="color" id="accent-light-picker" title="Accent for Light Theme" style="position:absolute;left:-9999px;">
+
+            <button class="theme-toggle" id="dark-theme-btn" onclick="setTheme('dark')" title="Dark Mode">🌙
+                <span class="accent-dot" id="accent-dot-dark"></span>
+            </button>
+            <input type="color" id="accent-dark-picker" title="Accent for Dark Theme" style="position:absolute;left:-9999px;">
         </div>
     </div>
     
@@ -984,13 +996,19 @@
                 const dark = localStorage.getItem('accent_dark') || '#00ff88';
                 const lp=document.getElementById('accent-light-picker'); if(lp) lp.value = light;
                 const dp=document.getElementById('accent-dark-picker'); if(dp) dp.value = dark;
+                // update small dots on theme icons
+                const dotL = document.getElementById('accent-dot-light'); if(dotL) { dotL.style.background = light; dotL.style.boxShadow = `0 0 8px ${light}`; }
+                const dotD = document.getElementById('accent-dot-dark'); if(dotD) { dotD.style.background = dark; dotD.style.boxShadow = `0 0 10px ${dark}`; }
                 applyOverrides(light,dark);
             }
 
             document.addEventListener('DOMContentLoaded', ()=>{
                 const lp=document.getElementById('accent-light-picker'); const dp=document.getElementById('accent-dark-picker');
+                const dotL = document.getElementById('accent-dot-light'); const dotD = document.getElementById('accent-dot-dark');
                 if(lp) lp.addEventListener('input', e=>{ localStorage.setItem('accent_light', e.target.value); applyStoredAccents(); });
                 if(dp) dp.addEventListener('input', e=>{ localStorage.setItem('accent_dark', e.target.value); applyStoredAccents(); });
+                if(dotL && lp) dotL.addEventListener('click', ()=> lp.click());
+                if(dotD && dp) dotD.addEventListener('click', ()=> dp.click());
                 applyStoredAccents();
             });
 
