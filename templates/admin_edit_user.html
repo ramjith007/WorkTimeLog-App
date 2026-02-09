@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User - Work Time Log</title>
+    <style>
+        :root {
+            /* Futuristic Light Theme (neon green accents) */
+            --bg-primary: #f6fff9;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #effffb;
+            --text-primary: #062b20;
+            --text-secondary: #0b5b46;
+            --text-tertiary: #2b7a61;
+            --border-color: rgba(45,212,191,0.25);
+            --button-primary: #2dd4bf;
+            --button-success: #10b981;
+            --button-danger: #ff3860;
+            --shadow: 0 6px 24px rgba(45,212,191,0.08);
+            --neon-glow: 0 0 12px rgba(45,212,191,0.6);
+        }
+
+        html.dark-mode {
+            /* Futuristic Dark Theme (pinkish violet accents) */
+            --bg-primary: #07060a;
+            --bg-secondary: #0b0710;
+            --bg-tertiary: #12081a;
+            --text-primary: #ffdff6;
+            --text-secondary: #ffb5f0;
+            --text-tertiary: #ff89dd;
+            --border-color: rgba(221,51,250,0.18);
+            --button-primary: #dd33fa;
+            --button-success: #ec4899;
+            --button-danger: #ff3366;
+            --shadow: 0 10px 40px rgba(221,51,250,0.12);
+            --neon-glow: 0 0 18px rgba(221,51,250,0.75);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent), var(--bg-primary);
+            padding: 20px;
+            padding-top: 80px;
+            color: var(--text-primary);
+            transition: background 0.35s ease, color 0.25s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header-top {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(240,255,250,0.02));
+            border-bottom: 1px solid rgba(45,212,191,0.15);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 120;
+            backdrop-filter: blur(6px);
+        }
+
+        html.dark-mode .header-top {
+            background: linear-gradient(90deg, rgba(10,6,18,0.05), rgba(20,8,30,0.02));
+            border-bottom-color: rgba(221,51,250,0.15);
+        }
+
+        .header-left h2 {
+            color: var(--button-primary);
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .user-info {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--button-primary);
+            color: var(--button-primary);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(45,212,191,0.1);
+            box-shadow: var(--neon-glow);
+        }
+
+        .theme-toggle.active {
+            background: var(--button-primary);
+            color: white;
+            box-shadow: var(--neon-glow);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--button-primary);
+            color: var(--button-primary);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: var(--button-primary);
+            color: white;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            color: var(--button-primary);
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 6px rgba(45,212,191,0.2);
+        }
+
+        .subtitle {
+            color: var(--text-tertiary);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: var(--button-primary);
+            box-shadow: 0 0 18px rgba(45,212,191,0.25), inset 0 0 8px rgba(45,212,191,0.04);
+            background: var(--bg-secondary);
+        }
+
+        html.dark-mode input[type="text"]:focus,
+        html.dark-mode input[type="email"]:focus {
+            box-shadow: 0 0 18px rgba(221,51,250,0.25), inset 0 0 8px rgba(221,51,250,0.04);
+        }
+
+        .readonly-field {
+            background: var(--bg-tertiary);
+            color: var(--text-tertiary);
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button[type="submit"] {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(90deg, var(--button-primary), rgba(45,212,191,0.8));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 18px rgba(45,212,191,0.2);
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--neon-glow);
+        }
+
+        html.dark-mode button[type="submit"] {
+            background: linear-gradient(90deg, var(--button-primary), rgba(221,51,250,0.8));
+            box-shadow: 0 6px 18px rgba(221,51,250,0.2);
+        }
+
+        .error {
+            background: rgba(255,56,96,0.15);
+            color: var(--button-danger);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--button-danger);
+        }
+
+        .user-details {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .user-details strong {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="header-top">
+        <div class="header-left">
+            <h2>Edit User</h2>
+        </div>
+        <div class="header-right">
+            <a href="{{ url_for('admin_dashboard') }}" class="back-btn">← Back to Dashboard</a>
+            <button class="theme-toggle active" onclick="setTheme('light')" title="Light Mode">☀️</button>
+            <button class="theme-toggle" onclick="setTheme('dark')" title="Dark Mode">🌙</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>✏️ Edit User Details</h1>
+        <p class="subtitle">Update user information</p>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <div class="user-details">
+            <strong>User ID:</strong> {{ user.id }}<br>
+            <strong>Joined:</strong> {{ user.created_at }}<br>
+            <strong>Role:</strong> {% if user.is_admin %}Admin{% else %}Regular User{% endif %}
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" value="{{ user.username }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="full_name">Full Name:</label>
+                <input type="text" id="full_name" name="full_name" value="{{ user.full_name }}" required>
+            </div>
+
+            <div class="button-group">
+                <button type="submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function setTheme(theme) {
+            const html = document.documentElement;
+            if (theme === 'dark') {
+                html.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                html.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+        }
+
+        loadTheme();
+    </script>
+</body>
+</html>

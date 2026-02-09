@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Note - Auth System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 style="margin: 0; color: #667eea;">✏️ Edit Note</h1>
+        <a href="{{ url_for('notes') }}" style="color: #667eea; text-decoration: none; font-size: 0.9em;">← Back to Notes</a>
+    </div>
+
+    <form method="POST" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Note Title</label>
+            <input type="text" name="title" value="{{ note.title }}" placeholder="Note Title" maxlength="100" required 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Content</label>
+            <textarea name="content" placeholder="Note Content" required 
+                      style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; min-height: 200px; font-family: inherit; resize: vertical; box-sizing: border-box;">{{ note.content }}</textarea>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 500;">Category</label>
+            <select name="category" required 
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; box-sizing: border-box;">
+                {% for cat in all_categories %}
+                <option value="{{ cat }}" {% if cat == note.category %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <a href="{{ url_for('notes') }}" style="padding: 10px 20px; background: #ddd; color: #333; text-decoration: none; border-radius: 6px; cursor: pointer; transition: background 0.3s;">
+                Cancel
+            </a>
+            <button type="submit" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.3s;">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

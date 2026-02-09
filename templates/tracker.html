@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Time Log - Time Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Futuristic Light Theme (neon green accents) */
+            --bg-primary: #f6fff9;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #effffb;
+            --bg-form: #e8fff2;
+            --text-primary: #062b20;
+            --text-secondary: #0b5b46;
+            --text-tertiary: #2b7a61;
+            --border-color: rgba(45,212,191,0.25);
+            --button-primary: #2dd4bf;
+            --button-success: #10b981;
+            --button-success-hover: #059669;
+            --button-success-active: #047857;
+            --button-danger: #ff3860;
+            --button-danger-hover: #e02e52;
+            --button-warning: #ffb84d;
+            --button-secondary: #6ee7b7;
+            --shadow: 0 6px 24px rgba(45,212,191,0.08);
+            --shadow-lg: 0 12px 48px rgba(45,212,191,0.12);
+            --table-row-hover: rgba(45,212,191,0.04);
+            --stat-border: #2dd4bf;
+            --dev-positive: #10b981;
+            --dev-negative: #ff3860;
+            --header-bg: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(240,255,250,0.6));
+            --neon-glow: 0 0 12px rgba(45,212,191,0.6);
+            --neon-glow-lg: 0 0 30px rgba(45,212,191,0.35);
+        }
+
+        html.dark-mode {
+            /* Futuristic Dark Theme (pinkish violet accents) */
+            --bg-primary: #07060a;
+            --bg-secondary: #0b0710;
+            --bg-tertiary: #12081a;
+            --bg-form: #13101f;
+            --text-primary: #ffdff6;
+            --text-secondary: #ffb5f0;
+            --text-tertiary: #ff89dd;
+            --border-color: rgba(221,51,250,0.18);
+            --button-primary: #dd33fa;
+            --button-success: #ec4899;
+            --button-success-hover: #d946ef;
+            --button-danger: #ff3366;
+            --button-warning: #ffd24d;
+            --button-secondary: #f472b6;
+            --shadow: 0 10px 40px rgba(221,51,250,0.12);
+            --shadow-lg: 0 18px 60px rgba(221,51,250,0.18);
+            --table-row-hover: rgba(221,51,250,0.03);
+            --stat-border: #dd33fa;
+            --dev-positive: #ec4899;
+            --dev-negative: #ff3366;
+            --header-bg: linear-gradient(90deg, rgba(10,6,18,0.85), rgba(20,8,30,0.7));
+            --neon-glow: 0 0 18px rgba(221,51,250,0.75);
+            --neon-glow-lg: 0 0 48px rgba(221,51,250,0.45);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent), var(--bg-primary);
+            padding: 20px;
+            padding-top: 100px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            transition: background 0.35s ease, color 0.25s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--header-bg);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            box-shadow: var(--neon-glow-lg), 0 6px 20px rgba(0,0,0,0.35);
+            padding: 18px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 120;
+            backdrop-filter: blur(6px) saturate(140%);
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        @keyframes clockGlow {
+            0%, 100% {
+                box-shadow: 0 2px 8px rgba(0, 132, 255, 0.3), 0 0 12px rgba(0, 132, 255, 0.2);
+            }
+            50% {
+                box-shadow: 0 2px 12px rgba(0, 132, 255, 0.5), 0 0 20px rgba(0, 132, 255, 0.3);
+            }
+        }
+        
+        html.dark-mode@keyframes darkClockGlow {
+            0%, 100% {
+                box-shadow: 0 2px 8px rgba(31, 154, 237, 0.4), 0 0 12px rgba(31, 154, 237, 0.2);
+            }
+            50% {
+                box-shadow: 0 2px 12px rgba(31, 154, 237, 0.6), 0 0 20px rgba(31, 154, 237, 0.3);
+            }
+        }
+        
+        .analog-clock {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 2.5px solid var(--button-primary);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 132, 255, 0.3), 0 0 12px rgba(0, 132, 255, 0.2);
+            animation: clockGlow 2s ease-in-out infinite;
+        }
+        
+        html.dark-mode .analog-clock {
+            box-shadow: 0 2px 8px rgba(31, 154, 237, 0.4), 0 0 12px rgba(31, 154, 237, 0.2);
+            animation: darkClockGlow 2s ease-in-out infinite;
+        }
+        
+        .clock-hand {
+            position: absolute;
+            background-color: var(--button-primary);
+            transform-origin: bottom center;
+            left: 50%;
+            border-radius: 2px;
+        }
+        
+        .clock-hand.hour {
+            width: 2.7px;
+            height: 10.8px;
+            margin-left: -1.35px;
+            margin-bottom: 12.6px;
+            opacity: 0.9;
+            box-shadow: 0 0 4px rgba(0, 132, 255, 0.6);
+        }
+        
+        .clock-hand.minute {
+            width: 1.8px;
+            height: 13.5px;
+            margin-left: -0.9px;
+            margin-bottom: 9px;
+            box-shadow: 0 0 4px rgba(0, 132, 255, 0.7);
+        }
+        
+        .clock-hand.second {
+            width: 1px;
+            height: 14.4px;
+            margin-left: -0.5px;
+            margin-bottom: 8.1px;
+            background-color: var(--dev-negative);
+            opacity: 0.85;
+            box-shadow: 0 0 3px rgba(240, 40, 73, 0.8);
+        }
+        
+        .clock-center {
+            position: absolute;
+            width: 4.5px;
+            height: 4.5px;
+            background-color: var(--button-primary);
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0 0 6px rgba(0, 132, 255, 0.8);
+        }
+        
+        .header-datetime {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+        
+        .theme-toggle-container {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .theme-toggle {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .accent-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.2);
+            vertical-align: middle;
+        }
+
+        .theme-toggle input[type="color"]{
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            color: var(--text-tertiary);
+            background: transparent;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(var(--f-accent-rgb, 0,0,0), 0.06);
+        }
+        .nav-btn.active {
+            font-weight: 800;
+            color: var(--text-primary);
+            background: rgba(var(--f-accent-rgb, 45,212,191), 0.08);
+            border-color: var(--f-accent);
+        }
+        
+        .theme-toggle:hover {
+            background-color: var(--button-primary);
+            border-color: var(--button-primary);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .theme-toggle.active {
+            background-color: var(--button-primary);
+            border-color: var(--button-primary);
+            color: white;
+        }
+        
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+            padding: 34px;
+            border-radius: 14px;
+            box-shadow: var(--shadow-lg), inset 0 0 40px rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,0.04);
+            animation: containerBorderGlow 3.2s ease-in-out infinite;
+            transform: translateZ(0);
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 26px;
+            font-weight: 600;
+        }
+        
+        h2 {
+            color: var(--text-primary);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 17px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--button-primary);
+            padding-bottom: 8px;
+        }
+        
+        .form-section {
+            background-color: var(--bg-tertiary);
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        label {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        input[type="date"],
+        input[type="time"] {
+            padding: 12px 14px;
+            border: 2px solid rgba(var(--f-accent-rgb, 45,212,191), 0.25);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'Courier New', Courier, monospace;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(var(--f-accent-rgb, 45,212,191), 0.02));
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 42px;
+        }
+        
+        input[type="date"]:hover,
+        input[type="time"]:hover {
+            border-color: rgba(var(--f-accent-rgb, 45,212,191), 0.5);
+            box-shadow: 0 4px 12px rgba(var(--f-accent-rgb, 45,212,191), 0.08);
+        }
+        
+        input[type="date"]:focus,
+        input[type="time"]:focus {
+            outline: none;
+            border-color: var(--button-primary);
+            box-shadow: 0 0 18px rgba(var(--f-accent-rgb, 45,212,191), 0.25), inset 0 0 8px rgba(var(--f-accent-rgb, 45,212,191), 0.04);
+            background: linear-gradient(135deg, rgba(var(--f-accent-rgb, 45,212,191), 0.04), rgba(var(--f-accent-rgb, 45,212,191), 0.02));
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+        }
+        
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-add {
+            background-color: var(--button-success);
+            color: white;
+        }
+        
+        .btn-add:hover {
+            background-color: var(--button-success-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(49, 162, 76, 0.2);
+        }
+        
+        .btn-add:active {
+            background-color: var(--button-success-active);
+            transform: translateY(0);
+        }
+        
+        .btn-delete {
+            background-color: var(--button-danger);
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .btn-delete:hover {
+            background-color: var(--button-danger-hover);
+            transform: translateY(-1px);
+        }
+        
+        .btn-edit {
+            background-color: var(--button-warning);
+            color: black;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .btn-edit:hover {
+            background-color: var(--button-warning-hover);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: var(--bg-secondary);
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .close-modal {
+            color: var(--text-tertiary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-modal:hover,
+        .close-modal:focus {
+            color: var(--text-primary);
+        }
+        
+        .modal h2 {
+            margin-top: 0;
+            color: var(--text-primary);
+        }
+        
+        .modal-form-group {
+            margin-bottom: 15px;
+        }
+        
+        .modal-form-group label {
+            display: block;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        
+        .modal-form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid rgba(var(--f-accent-rgb, 221,51,250), 0.25);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'Courier New', Courier, monospace;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(var(--f-accent-rgb, 221,51,250), 0.02));
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            cursor: text;
+        }
+
+        .modal-form-group input:hover {
+            border-color: rgba(var(--f-accent-rgb, 221,51,250), 0.4);
+            box-shadow: 0 4px 12px rgba(var(--f-accent-rgb, 221,51,250), 0.08);
+        }
+
+        .modal-form-group input:focus {
+            outline: none;
+            border-color: var(--button-primary);
+            box-shadow: 0 0 18px rgba(var(--f-accent-rgb, 221,51,250), 0.25), inset 0 0 8px rgba(var(--f-accent-rgb, 221,51,250), 0.04);
+            background: linear-gradient(135deg, rgba(var(--f-accent-rgb, 221,51,250), 0.04), rgba(var(--f-accent-rgb, 221,51,250), 0.02));
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn-save {
+            background-color: var(--button-success);
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background-color: var(--button-success-hover);
+        }
+        
+        .btn-cancel {
+            background-color: var(--button-secondary);
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background-color: var(--button-secondary-hover);
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .message.success {
+            background-color: rgba(25, 135, 84, 0.2);
+            color: var(--dev-positive);
+            border: 1px solid var(--dev-positive);
+        }
+        
+        .message.error {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: var(--dev-negative);
+            border: 1px solid var(--dev-negative);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, var(--f-accent, var(--button-primary)) 0%, rgba(var(--f-accent-rgb, 45,212,191), 0.8) 100%);
+            color: #0a0a0a;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        html.dark-mode th {
+            color: #f5f5f5;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        tr:hover {
+            background-color: var(--table-row-hover);
+        }
+        
+        .statistics {
+            background-color: var(--bg-form);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid var(--stat-border);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .deviation-positive {
+            color: var(--dev-positive);
+        }
+        
+        .deviation-negative {
+            color: var(--dev-negative);
+        }
+        
+        .week-info {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-bottom: 15px;
+        }
+        
+        .month-info {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-bottom: 15px;
+        }
+        
+        textarea {
+            display: none;
+        }
+
+        /* Graph Section Styles */
+        .graph-section {
+            margin-top: 40px;
+        }
+
+        .graph-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .graph-tab {
+            padding: 8px 18px;
+            background: transparent;
+            border: 2px solid rgba(var(--f-accent-rgb, 45,212,191), 0.25);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.25s ease;
+            font-size: 14px;
+        }
+
+        .graph-tab:hover {
+            border-color: rgba(var(--f-accent-rgb, 45,212,191), 0.5);
+            background: rgba(var(--f-accent-rgb, 45,212,191), 0.04);
+        }
+
+        .graph-tab.active {
+            background: rgba(var(--f-accent-rgb, 45,212,191), 0.12);
+            border-color: var(--f-accent);
+            color: var(--text-primary);
+            box-shadow: 0 0 12px rgba(var(--f-accent-rgb, 45,212,191), 0.15);
+        }
+
+        .graph-container {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 6px 20px rgba(var(--f-accent-rgb, 45,212,191), 0.04);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .graph-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .graph-wrapper {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .loading-spinner.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Date/Time and Theme Toggle -->
+    <div class="header">
+        <div class="header-title">
+            <div class="analog-clock" id="analog-clock">
+                <div class="clock-hand hour" id="hour-hand"></div>
+                <div class="clock-hand minute" id="minute-hand"></div>
+                <div class="clock-hand second" id="second-hand"></div>
+                <div class="clock-center"></div>
+            </div>
+            <span>Work Time Log</span>
+        </div>
+        <div class="header-datetime" id="current-datetime"></div>
+        <div class="nav-controls">
+            <span style="color: var(--text-tertiary); font-size: 12px;">{{ username }}</span>
+            <a href="{{ url_for('logout') }}" style="color: var(--button-primary); text-decoration: none; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px; transition: all 0.2s;" onmouseover="this.style.backgroundColor='var(--button-primary)'; this.style.color='white';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--button-primary)';">Logout</a>
+        </div>
+        <div class="theme-toggle-container" style="position:relative;">
+            <button class="theme-toggle active" id="light-theme-btn" onclick="setTheme('light')" title="Light Mode">
+                ☀️ <span class="accent-dot" id="accent-dot-light"></span>
+                <input type="color" id="accent-light-picker" title="Accent for Light Theme" aria-label="Light accent picker">
+            </button>
+
+            <button class="theme-toggle" id="dark-theme-btn" onclick="setTheme('dark')" title="Dark Mode">
+                🌙 <span class="accent-dot" id="accent-dot-dark"></span>
+                <input type="color" id="accent-dark-picker" title="Accent for Dark Theme" aria-label="Dark accent picker">
+            </button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>Time Tracker</h1>
+        
+        <!-- Message Display -->
+        <div id="message" class="message"></div>
+        
+        <!-- Time Entry Form -->
+        <div class="form-section">
+            <h2>📝 Add Today's Time Entry</h2>
+            
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <input type="date" id="date" value="{{ today }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="in_time">In Time (HH:MM):</label>
+                <input type="time" id="in_time" placeholder="09:00">
+            </div>
+            
+            <div class="form-group">
+                <label for="out_time">Out Time (HH:MM):</label>
+                <input type="time" id="out_time" placeholder="18:00">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-add" onclick="addEntry()">Add Entry</button>
+            </div>
+        </div>
+        
+        <!-- Current Week Section -->
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <h2 style="margin:0;">📊 Week #{{ week_number }} - Time Entries</h2>
+                <div class="nav-controls">
+                    <a id="week-prev-btn" class="nav-btn" href="/tracker?week_offset={{ week_offset - 1 }}&month_offset={{ month_offset }}" title="Previous week">◀</a>
+                    <a id="week-current-btn" class="nav-btn {% if week_offset == 0 %}active{% endif %}" href="/tracker?week_offset=0&month_offset={{ month_offset }}" title="Current week">This Week</a>
+                    <a id="week-next-btn" class="nav-btn" href="/tracker?week_offset={{ week_offset + 1 }}&month_offset={{ month_offset }}" title="Next week">▶</a>
+                </div>
+        </div>
+        <div class="week-info">
+            <strong>Week {{ week_number }} of {{ week_year }}</strong> | {{ week_start }} to {{ week_end }}
+        </div>
+        
+        {% if week_entries %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>In Time</th>
+                    <th>Out Time</th>
+                    <th>Total Hours</th>
+                    <th>Deviation (min)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="week_table_body">
+                {% for entry in week_entries %}
+                <tr id="row-{{ entry.date }}">
+                    <td>{{ entry.date }}</td>
+                    <td>{{ entry.day }}</td>
+                    <td>{{ entry.in_time }}</td>
+                    <td>{{ entry.out_time }}</td>
+                    <td>{{ entry.total_hours }}</td>
+                    <td>
+                        {% if entry.deviation_minutes >= 0 %}
+                        <span class="deviation-positive">+{{ entry.deviation_minutes }}</span>
+                        {% else %}
+                        <span class="deviation-negative">{{ entry.deviation_minutes }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn-edit" onclick="editEntry('{{ entry.date }}', '{{ entry.in_time }}', '{{ entry.out_time }}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteEntry('{{ entry.date }}')">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr style="background-color: #f0f0f0; font-weight: bold;">
+                    <td colspan="4">WEEKLY TOTAL</td>
+                    <td>{{ weekly_total_hours }}</td>
+                    <td>
+                        {% if weekly_total_deviation >= 0 %}
+                        <span class="deviation-positive">+{{ weekly_total_deviation }}</span>
+                        {% else %}
+                        <span class="deviation-negative">{{ weekly_total_deviation }}</span>
+                        {% endif %}
+                    </td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: #666; padding: 20px; text-align: center;">No entries for this week yet.</p>
+        {% endif %}
+        
+        <!-- Weekly Statistics -->
+        <div class="statistics">
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-label">Weekly Total</div>
+                    <div class="stat-value">{{ weekly_total_hours }} hrs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Weekly Deviation from Target (8:42)</div>
+                    <div class="stat-value {% if weekly_total_deviation >= 0 %}deviation-positive{% else %}deviation-negative{% endif %}">
+                        {% if weekly_total_deviation >= 0 %}+{% endif %}{{ weekly_total_deviation }} min
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monthly Statistics -->
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <h2 style="margin:0;">📈 {{ month_full }} {{ month_year }} Summary</h2>
+            <div class="nav-controls">
+                <a id="month-prev-btn" class="nav-btn" href="/tracker?month_offset={{ month_offset - 1 }}&week_offset={{ week_offset }}" title="Previous month">◀</a>
+                <a id="month-current-btn" class="nav-btn {% if month_offset == 0 %}active{% endif %}" href="/tracker?month_offset=0&week_offset={{ week_offset }}" title="Current month">This Month</a>
+                <a id="month-next-btn" class="nav-btn" href="/tracker?month_offset={{ month_offset + 1 }}&week_offset={{ week_offset }}" title="Next month">▶</a>
+            </div>
+        </div>
+        <div class="month-info">
+            <strong>{{ month_full }} {{ month_year }}</strong> | {{ month_range }}
+        </div>
+        <div class="statistics">
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-label">Monthly Total</div>
+                    <div class="stat-value">{{ monthly_total_hours }} hrs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Monthly Deviation from Target</div>
+                    <div class="stat-value {% if monthly_total_deviation >= 0 %}deviation-positive{% else %}deviation-negative{% endif %}">
+                        {% if monthly_total_deviation >= 0 %}+{% endif %}{{ monthly_total_deviation }} min
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphs Section -->
+        <div class="graph-section">
+            <h2>📊 Login Hours Analytics</h2>
+            
+            <div class="graph-tabs">
+                <button class="graph-tab active" onclick="switchGraphTab('daily')">📅 This Week</button>
+                <button class="graph-tab" onclick="switchGraphTab('weekly')">📈 This Month</button>
+                <button class="graph-tab" onclick="switchGraphTab('monthly')">📉 This Year</button>
+            </div>
+
+            <!-- Daily Graph (This Week) -->
+            <div id="daily-container" class="graph-container active">
+                <div class="loading-spinner active" id="daily-spinner">Loading this week's data...</div>
+                <div class="graph-wrapper">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Weekly Graph (This Month) -->
+            <div id="weekly-container" class="graph-container">
+                <div class="loading-spinner active" id="weekly-spinner">Loading this month's data...</div>
+                <div class="graph-wrapper">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Monthly Graph (This Year) -->
+            <div id="monthly-container" class="graph-container">
+                <div class="loading-spinner active" id="monthly-spinner">Loading this year's data...</div>
+                <div class="graph-wrapper">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeEditModal()">&times;</span>
+            <h2>✏️ Edit Time Entry</h2>
+            
+            <div class="modal-form-group">
+                <label>Date:</label>
+                <div id="modal-date" style="padding: 8px; background-color: #f0f0f0; border-radius: 4px;"></div>
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modal-in-time">In Time (HH:MM):</label>
+                <input type="time" id="modal-in-time">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modal-out-time">Out Time (HH:MM):</label>
+                <input type="time" id="modal-out-time">
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-save" onclick="saveEditEntry()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showMessage(text, type) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = text;
+            msgDiv.className = `message ${type}`;
+            msgDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                msgDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        function addEntry() {
+            const date = document.getElementById('date').value;
+            const in_time = document.getElementById('in_time').value;
+            const out_time = document.getElementById('out_time').value;
+            
+            if (!date || !in_time || !out_time) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+            
+            fetch('/add_entry', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    date: date,
+                    in_time: in_time,
+                    out_time: out_time
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    document.getElementById('in_time').value = '';
+                    document.getElementById('out_time').value = '';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error, 'error');
+            });
+        }
+        
+        function deleteEntry(date) {
+            if (!confirm('Are you sure you want to delete this entry?')) {
+                return;
+            }
+            
+            fetch(`/delete_entry/${date}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error, 'error');
+            });
+        }
+        
+        let currentEditDate = null;
+        
+        function editEntry(date, inTime, outTime) {
+            currentEditDate = date;
+            document.getElementById('modal-date').textContent = date;
+            document.getElementById('modal-in-time').value = inTime;
+            document.getElementById('modal-out-time').value = outTime;
+            document.getElementById('editModal').style.display = 'block';
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentEditDate = null;
+        }
+        
+        function saveEditEntry() {
+            if (currentEditDate === null) {
+                showMessage('Error: No entry selected', 'error');
+                return;
+            }
+            
+            const inTime = document.getElementById('modal-in-time').value;
+            const outTime = document.getElementById('modal-out-time').value;
+            
+            if (!inTime || !outTime) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+            
+            fetch(`/update_entry/${currentEditDate}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    in_time: inTime,
+                    out_time: outTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    closeEditModal();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error, 'error');
+            });
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeEditModal();
+            }
+        }
+        
+        // Allow Enter key to submit form
+        document.getElementById('out_time').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addEntry();
+            }
+        });
+        
+        // Graph Management
+        let charts = {
+            daily: null,
+            weekly: null,
+            monthly: null
+        };
+
+        function getAccentColor() {
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const color = isDark ? localStorage.getItem('accent_dark') || '#dd33fa' : localStorage.getItem('accent_light') || '#2dd4bf';
+            return color;
+        }
+
+        function switchGraphTab(tabName) {
+            // Hide all containers
+            document.getElementById('daily-container').classList.remove('active');
+            document.getElementById('weekly-container').classList.remove('active');
+            document.getElementById('monthly-container').classList.remove('active');
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.graph-tab').forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected container and mark tab as active
+            document.getElementById(tabName + '-container').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Load data if not already loaded
+            if (charts[tabName] === null) {
+                loadGraphData(tabName);
+            } else {
+                // Update colors if theme changed
+                updateChartColors(charts[tabName], tabName);
+            }
+        }
+
+        function loadGraphData(graphType) {
+            const spinner = document.getElementById(graphType + '-spinner');
+            spinner.classList.add('active');
+            
+            const messages = {
+                'daily': "Loading this week's data...",
+                'weekly': "Loading this month's data...",
+                'monthly': "Loading this year's data..."
+            };
+            
+            spinner.textContent = messages[graphType];
+            
+            fetch(`/api/graph/${graphType}`)
+                .then(response => response.json())
+                .then(data => {
+                    spinner.classList.remove('active');
+                    
+                    if (data.success) {
+                        renderChart(graphType, data);
+                    } else {
+                        showMessage('Error loading ' + graphType + ' data', 'error');
+                    }
+                })
+                .catch(error => {
+                    spinner.classList.remove('active');
+                    showMessage('Error: ' + error, 'error');
+                });
+        }
+
+        function navigateGraph(direction) {
+            // Determine which graph is currently active
+            const activeTab = document.querySelector('.graph-tab.active');
+            const graphType = activeTab.textContent.includes('This Week') ? 'daily' : 
+                             activeTab.textContent.includes('This Month') ? 'weekly' : 'monthly';
+            
+            // Get current offsets from URL
+            const params = new URLSearchParams(window.location.search);
+            let weekOffset = parseInt(params.get('week_offset')) || 0;
+            let monthOffset = parseInt(params.get('month_offset')) || 0;
+            let yearOffset = parseInt(params.get('year_offset')) || 0;
+            
+            // Update appropriate offset based on active graph
+            if (graphType === 'daily') {
+                weekOffset += direction;
+            } else if (graphType === 'weekly') {
+                monthOffset += direction;
+            } else if (graphType === 'monthly') {
+                yearOffset += direction;
+            }
+            
+            // Update URL with new offsets
+            const newParams = new URLSearchParams(window.location.search);
+            if (graphType === 'daily') {
+                newParams.set('week_offset', weekOffset);
+            } else if (graphType === 'weekly') {
+                newParams.set('month_offset', monthOffset);
+            } else if (graphType === 'monthly') {
+                newParams.set('year_offset', yearOffset);
+            }
+            
+            window.history.replaceState({}, '', window.location.pathname + '?' + newParams.toString());
+            
+            // Clear cache and reload data
+            charts[graphType] = null;
+            loadGraphData(graphType);
+        }
+
+        function renderChart(graphType, data) {
+            const canvasId = graphType === 'daily' ? 'dailyChart' : 
+                            graphType === 'weekly' ? 'weeklyChart' : 'monthlyChart';
+            
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Get theme colors
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const accentColor = getAccentColor();
+            const textColor = isDark ? '#ffdff6' : '#062b20';
+            const gridColor = isDark ? 'rgba(255,215,246,0.08)' : 'rgba(6,43,32,0.08)';
+            
+            // Destroy existing chart if it exists
+            if (charts[graphType]) {
+                charts[graphType].destroy();
+            }
+            
+            charts[graphType] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Average Hours Worked',
+                        data: data.values,
+                        backgroundColor: accentColor,
+                        borderColor: accentColor,
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        hoverBackgroundColor: adjustBrightness(accentColor, 20),
+                        hoverBorderColor: adjustBrightness(accentColor, 20),
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: textColor,
+                                font: { size: 12, weight: '600', family: "'Courier New', Courier, monospace" },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? 'rgba(13, 7, 21, 0.9)' : 'rgba(240, 255, 250, 0.95)',
+                            borderColor: accentColor,
+                            borderWidth: 1,
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            padding: 12,
+                            titleFont: { size: 13, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            cornerRadius: 6,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Average: ' + context.parsed.y.toFixed(2) + ' hrs';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: textColor,
+                                font: { size: 11, family: "'Courier New', Courier, monospace" },
+                                callback: function(value) {
+                                    return value.toFixed(1) + 'h';
+                                }
+                            },
+                            grid: {
+                                color: gridColor,
+                                drawBorder: true,
+                                borderColor: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: textColor,
+                                font: { size: 11, weight: '600', family: "'Courier New', Courier, monospace" }
+                            },
+                            grid: {
+                                display: false,
+                                drawBorder: true,
+                                borderColor: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartColors(chart, graphType) {
+            const accentColor = getAccentColor();
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const textColor = isDark ? '#ffdff6' : '#062b20';
+            const gridColor = isDark ? 'rgba(255,215,246,0.08)' : 'rgba(6,43,32,0.08)';
+            
+            chart.data.datasets[0].backgroundColor = accentColor;
+            chart.data.datasets[0].borderColor = accentColor;
+            chart.data.datasets[0].hoverBackgroundColor = adjustBrightness(accentColor, 20);
+            chart.data.datasets[0].hoverBorderColor = adjustBrightness(accentColor, 20);
+            
+            chart.options.plugins.legend.labels.color = textColor;
+            chart.options.scales.y.ticks.color = textColor;
+            chart.options.scales.y.grid.color = gridColor;
+            chart.options.scales.x.ticks.color = textColor;
+            chart.options.plugins.tooltip.backgroundColor = isDark ? 'rgba(13, 7, 21, 0.9)' : 'rgba(240, 255, 250, 0.95)';
+            chart.options.plugins.tooltip.borderColor = accentColor;
+            chart.options.plugins.tooltip.titleColor = textColor;
+            chart.options.plugins.tooltip.bodyColor = textColor;
+            
+            chart.update();
+        }
+
+        function adjustBrightness(color, percent) {
+            const num = parseInt(color.replace("#",""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, (num >> 16) + amt);
+            const G = Math.min(255, (num >> 8 & 0x00FF) + amt);
+            const B = Math.min(255, (num & 0x0000FF) + amt);
+            return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        // Load charts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGraphData('daily');
+        });
+        
+        // Theme Management
+        function setTheme(theme) {
+            const html = document.documentElement;
+            const lightBtn = document.getElementById('light-theme-btn');
+            const darkBtn = document.getElementById('dark-theme-btn');
+            
+            if (theme === 'dark') {
+                html.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+                lightBtn.classList.remove('active');
+                darkBtn.classList.add('active');
+            } else {
+                html.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+                lightBtn.classList.add('active');
+                darkBtn.classList.remove('active');
+            }
+            // Re-apply stored accents after switching theme (updates hue rotation)
+            if (typeof applyStoredAccents === 'function') applyStoredAccents();
+            
+            // Update all active charts
+            updateAllCharts();
+        }
+
+        function updateAllCharts() {
+            if (charts.daily) updateChartColors(charts.daily, 'daily');
+            if (charts.weekly) updateChartColors(charts.weekly, 'weekly');
+            if (charts.monthly) updateChartColors(charts.monthly, 'monthly');
+        }
+        
+        // Load saved theme on page load
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+        }
+        
+        // Load theme when page loads
+        loadTheme();
+        
+        // Update current date and time
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            const dateTimeString = now.toLocaleDateString('en-US', options);
+            document.getElementById('current-datetime').textContent = dateTimeString;
+        }
+        
+        // Update date/time on page load and every second
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        
+        // Update analog clock hands
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            // Calculate rotation angles
+            const secondRotation = (seconds / 60) * 360;
+            const minuteRotation = (minutes / 60) * 360 + (seconds / 60) * 6;
+            const hourRotation = (hours % 12 / 12) * 360 + (minutes / 60) * 30;
+            
+            // Update hands
+            document.getElementById('second-hand').style.transform = `rotate(${secondRotation}deg)`;
+            document.getElementById('minute-hand').style.transform = `rotate(${minuteRotation}deg)`;
+            document.getElementById('hour-hand').style.transform = `rotate(${hourRotation}deg)`;
+        }
+        
+        // Update clock on page load and every second
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+    <script>
+        // Ensure nav buttons show active state reliably based on URL params
+        document.addEventListener('DOMContentLoaded', function(){
+            try{
+                const params = new URLSearchParams(window.location.search);
+                const wo = parseInt(params.get('week_offset')||'0',10);
+                const mo = parseInt(params.get('month_offset')||'0',10);
+                const weekCurrent = document.getElementById('week-current-btn');
+                const monthCurrent = document.getElementById('month-current-btn');
+                if(weekCurrent){
+                    if(wo === 0) weekCurrent.classList.add('active'); else weekCurrent.classList.remove('active');
+                }
+                if(monthCurrent){
+                    if(mo === 0) monthCurrent.classList.add('active'); else monthCurrent.classList.remove('active');
+                }
+            }catch(e){console.warn('nav active check failed', e)}
+        });
+
+        /* Per-theme futuristic palette generator and overrides */
+        (function(){
+            function hexToRgb(hex) {
+                hex = hex.replace('#','');
+                if (hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+                const n = parseInt(hex,16);
+                return [(n>>16)&255, (n>>8)&255, n&255];
+            }
+
+            function clamp(v,a,b){return Math.min(Math.max(v,a),b);} 
+            function adjustColor(hex, pct){
+                const [r,g,b]=hexToRgb(hex);
+                const t = pct<0?0:255; const p=Math.abs(pct)/100;
+                const nr=Math.round((t-r)*p+r), ng=Math.round((t-g)*p+g), nb=Math.round((t-b)*p+b);
+                return '#'+[nr,ng,nb].map(x=>clamp(x,0,255).toString(16).padStart(2,'0')).join('');
+            }
+
+            function buildCss(lightHex,darkHex){
+                const [lr,lg,lb]=hexToRgb(lightHex);
+                const [dr,dg,db]=hexToRgb(darkHex);
+                const lightAccentDark = adjustColor(lightHex, -12);
+                const lightAccentLight = adjustColor(lightHex, 18);
+                const darkAccentDark = adjustColor(darkHex, -12);
+                const darkAccentLight = adjustColor(darkHex, 18);
+
+                const css = `
+                :root{
+                    --f-accent: ${lightHex};
+                    --f-accent-rgb: ${lr},${lg},${lb};
+                    --f-accent-dark: ${lightAccentDark};
+                    --f-accent-light: ${lightAccentLight};
+                    --f-neon: rgba(${lr},${lg},${lb},0.12);
+                    --f-neon-glow: 0 0 18px rgba(${lr},${lg},${lb},0.55);
+                    --f-neon-glow-lg: 0 0 40px rgba(${lr},${lg},${lb},0.22);
+                    --f-gradient: linear-gradient(135deg, rgba(${lr},${lg},${lb},0.12), rgba(${lr},${lg},${lb},0.02));
+                }
+                html.dark-mode{
+                    --f-accent: ${darkHex};
+                    --f-accent-rgb: ${dr},${dg},${db};
+                    --f-accent-dark: ${darkAccentDark};
+                    --f-accent-light: ${darkAccentLight};
+                    --f-neon: rgba(${dr},${dg},${db},0.16);
+                    --f-neon-glow: 0 0 30px rgba(${dr},${dg},${db},0.7);
+                    --f-neon-glow-lg: 0 0 60px rgba(${dr},${dg},${db},0.32);
+                    --f-gradient: linear-gradient(135deg, rgba(${dr},${dg},${db},0.12), rgba(${dr},${dg},${db},0.04));
+                }
+
+                /* Enhanced futuristic effects */
+                body {
+                    background-image: radial-gradient(800px 300px at 10% 10%, rgba(${lr},${lg},${lb},0.04), transparent), radial-gradient(600px 260px at 90% 80%, rgba(${dr},${dg},${db},0.03), transparent), var(--bg-primary);
+                }
+
+                .header{
+                    border-bottom-color: var(--f-accent) !important;
+                    box-shadow: var(--f-neon-glow-lg), 0 6px 24px rgba(var(--f-accent-rgb),0.12) !important;
+                }
+
+                .header-title span{ color: var(--f-accent) !important; text-shadow: 0 0 6px rgba(var(--f-accent-rgb),0.25); }
+
+                .analog-clock{ border-color: var(--f-accent) !important; box-shadow: var(--f-neon-glow) !important; }
+
+                .clock-hand.hour, .clock-hand.minute { background-color: var(--f-accent) !important; box-shadow: 0 0 6px rgba(var(--f-accent-rgb),0.65) !important; }
+
+                .container{ border-color: rgba(var(--f-accent-rgb),0.12) !important; box-shadow: 0 12px 48px rgba(var(--f-accent-rgb),0.06) !important; }
+
+                .form-section{ border-color: rgba(var(--f-accent-rgb),0.18) !important; box-shadow: inset 0 0 30px rgba(var(--f-accent-rgb),0.02) !important; }
+
+                table{ border-color: rgba(var(--f-accent-rgb),0.12) !important; box-shadow: 0 8px 24px rgba(var(--f-accent-rgb),0.04) !important; }
+
+                td{ border-bottom-color: rgba(var(--f-accent-rgb),0.08) !important; }
+
+                .week-info, .month-info{ border-top: 1px solid rgba(var(--f-accent-rgb),0.12) !important; padding-top: 8px !important; }
+
+                input[type="date"], input[type="time"]{ 
+                    border: 2px solid rgba(var(--f-accent-rgb),0.35) !important;
+                    background: linear-gradient(135deg, rgba(var(--f-accent-rgb),0.05), rgba(var(--f-accent-rgb),0.02)) !important;
+                    color: var(--text-primary) !important;
+                    box-shadow: inset 0 0 12px rgba(var(--f-accent-rgb),0.04) !important;
+                }
+
+                input[type="date"]:hover, input[type="time"]:hover{
+                    border-color: rgba(var(--f-accent-rgb),0.55) !important;
+                    box-shadow: 0 0 14px rgba(var(--f-accent-rgb),0.14), inset 0 0 12px rgba(var(--f-accent-rgb),0.04) !important;
+                }
+
+                input[type="date"]:focus, input[type="time"]:focus{ 
+                    border-color: var(--f-accent) !important;
+                    box-shadow: 0 0 24px rgba(var(--f-accent-rgb),0.28), inset 0 0 12px rgba(var(--f-accent-rgb),0.06) !important;
+                }
+
+                input[type="date"]::placeholder, input[type="time"]::placeholder{ color: rgba(var(--f-accent-rgb),0.4) !important; }
+
+                input[type="date"]::-webkit-calendar-picker-indicator,
+                input[type="time"]::-webkit-calendar-picker-indicator { 
+                    cursor: pointer;
+                    opacity: 0.75;
+                    filter: invert(0.8) brightness(1.1) saturate(1.3);
+                }
+
+                input[type="date"]::-webkit-calendar-picker-indicator:hover,
+                input[type="time"]::-webkit-calendar-picker-indicator:hover { 
+                    opacity: 1;
+                    filter: invert(0.85) brightness(1.2) saturate(1.5);
+                }
+
+                input[type="date"], input[type="time"] {
+                    accent-color: var(--f-accent);
+                    caret-color: var(--f-accent);
+                }
+
+                button, .theme-toggle{ border-color: var(--f-accent) !important; }
+
+                .btn-add{ background: linear-gradient(90deg, var(--f-accent), var(--f-accent-dark)) !important; color: #fff !important; box-shadow: 0 10px 36px rgba(var(--f-accent-rgb),0.22), inset 0 1px 0 rgba(255,255,255,0.1) !important; }
+                html.dark-mode .btn-add{ box-shadow: 0 12px 48px rgba(var(--f-accent-rgb),0.32), inset 0 1px 0 rgba(255,255,255,0.08) !important; }
+
+                .btn-delete, .btn-edit{ box-shadow: 0 4px 12px rgba(var(--f-accent-rgb),0.08) !important; }
+
+                .modal-content{ box-shadow: 0 20px 60px rgba(var(--f-accent-rgb),0.15) !important; }
+
+                .modal-form-group input{ 
+                    border: 2px solid rgba(var(--f-accent-rgb),0.28) !important;
+                    background: linear-gradient(135deg, rgba(var(--f-accent-rgb),0.04), rgba(var(--f-accent-rgb),0.01)) !important;
+                    color: var(--text-primary) !important;
+                    box-shadow: inset 0 0 10px rgba(var(--f-accent-rgb),0.03) !important;
+                }
+
+                .modal-form-group input:hover{
+                    border-color: rgba(var(--f-accent-rgb),0.45) !important;
+                    box-shadow: 0 0 12px rgba(var(--f-accent-rgb),0.12), inset 0 0 10px rgba(var(--f-accent-rgb),0.03) !important;
+                }
+
+                .modal-form-group input:focus{
+                    border-color: var(--f-accent) !important;
+                    box-shadow: 0 0 20px rgba(var(--f-accent-rgb),0.24), inset 0 0 10px rgba(var(--f-accent-rgb),0.05) !important;
+                }
+
+                .modal-form-group input::placeholder{ color: rgba(var(--f-accent-rgb),0.35) !important; }
+
+                .statistics{ box-shadow: 0 8px 24px rgba(var(--f-accent-rgb),0.04) !important; }
+
+                .nav-btn.active{ background: linear-gradient(90deg, rgba(var(--f-accent-rgb),0.06), rgba(var(--f-accent-rgb),0.03)); border-color: var(--f-accent); }
+
+                h1, h2{ color: var(--f-accent) !important; text-shadow: 0 0 8px rgba(var(--f-accent-rgb),0.12); }
+
+                h2{ border-bottom-color: var(--f-accent) !important; }
+
+                table thead th{ background: linear-gradient(90deg, rgba(var(--f-accent-rgb),0.10), rgba(var(--f-accent-rgb),0.03)) !important; box-shadow: inset 0 -3px 10px rgba(var(--f-accent-rgb),0.02), 0 2px 4px rgba(var(--f-accent-rgb),0.04) !important; border-bottom: 2px solid rgba(var(--f-accent-rgb),0.15) !important; }
+                tr:hover{ background: rgba(var(--f-accent-rgb),0.04) !important; }
+
+                .stat-item{ box-shadow: 0 8px 30px rgba(var(--f-accent-rgb),0.03), inset 0 1px 0 rgba(var(--f-accent-rgb),0.06) !important; border-left-color: var(--f-accent) !important; color: var(--text-primary); }
+
+                .accent-dot{ box-shadow: 0 0 12px rgba(var(--f-accent-rgb),0.45); border-color: rgba(255,255,255,0.12); }
+
+                a, .link{ color: var(--f-accent) !important; text-decoration: underline dotted var(--f-accent)  !important; }
+                `;
+
+                return css;
+            }
+
+            function applyOverrides(lightHex,darkHex){
+                let s=document.getElementById('futuristic-accent-style');
+                if(!s){ s=document.createElement('style'); s.id='futuristic-accent-style'; document.head.appendChild(s);} 
+                s.textContent = buildCss(lightHex,darkHex);
+                
+                // Update accent color for picker icons
+                const isDark = document.documentElement.classList.contains('dark-mode');
+                const accentHex = isDark ? darkHex : lightHex;
+                document.documentElement.style.setProperty('--f-accent', accentHex);
+            }
+
+            function hexToHue(hex) {
+                hex = hex.replace('#','');
+                if (hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+                const r = parseInt(hex.substr(0,2), 16) / 255;
+                const g = parseInt(hex.substr(2,2), 16) / 255;
+                const b = parseInt(hex.substr(4,2), 16) / 255;
+                const max = Math.max(r,g,b), min = Math.min(r,g,b);
+                const delta = max - min;
+                let hue = 0;
+                if(delta !== 0) {
+                    if(max === r) hue = ((g - b) / delta + (g < b ? 6 : 0)) / 6;
+                    else if(max === g) hue = ((b - r) / delta + 2) / 6;
+                    else hue = ((r - g) / delta + 4) / 6;
+                }
+                return Math.round(hue * 360);
+            }
+
+            function applyStoredAccents(){
+                const light = localStorage.getItem('accent_light') || '#2dd4bf';
+                const dark = localStorage.getItem('accent_dark') || '#00ff88';
+                const lp=document.getElementById('accent-light-picker'); if(lp) lp.value = light;
+                const dp=document.getElementById('accent-dark-picker'); if(dp) dp.value = dark;
+                // update small dots on theme icons
+                const dotL = document.getElementById('accent-dot-light'); if(dotL) { dotL.style.background = light; dotL.style.boxShadow = `0 0 8px ${light}`; }
+                const dotD = document.getElementById('accent-dot-dark'); if(dotD) { dotD.style.background = dark; dotD.style.boxShadow = `0 0 10px ${dark}`; }
+                applyOverrides(light,dark);
+            }
+
+            document.addEventListener('DOMContentLoaded', ()=>{
+                const lp=document.getElementById('accent-light-picker'); const dp=document.getElementById('accent-dark-picker');
+                const dotL = document.getElementById('accent-dot-light'); const dotD = document.getElementById('accent-dot-dark');
+                if(lp) lp.addEventListener('input', e=>{ localStorage.setItem('accent_light', e.target.value); applyStoredAccents(); updateAllCharts(); });
+                if(dp) dp.addEventListener('input', e=>{ localStorage.setItem('accent_dark', e.target.value); applyStoredAccents(); updateAllCharts(); });
+                if(dotL && lp) dotL.addEventListener('click', ()=> lp.click());
+                if(dotD && dp) dotD.addEventListener('click', ()=> dp.click());
+                applyStoredAccents();
+            });
+
+            // expose helper for theme switch to reapply
+            window.applyStoredAccents = applyStoredAccents;
+        })();
+    </script>
+</body>
+</html>

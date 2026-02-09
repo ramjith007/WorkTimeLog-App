@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}My Notes - Auth System{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 style="margin: 0; color: #667eea;">📝 My Notes</h1>
+        <a href="{{ url_for('welcome') }}" style="color: #667eea; text-decoration: none; font-size: 0.9em;">← Back to Dashboard</a>
+    </div>
+
+    <!-- Create New Section Form -->
+    <div style="background: #f0f0f0; border-left: 4px solid #764ba2; padding: 20px; margin-bottom: 20px; border-radius: 8px;">
+        <h3 style="margin-top: 0; color: #333;">Create New Section</h3>
+        <form method="POST" action="{{ url_for('add_section') }}" style="display: flex; gap: 10px; align-items: flex-end;">
+            <div style="flex: 1;">
+                <label style="display: block; margin-bottom: 5px; color: #666; font-weight: 500; font-size: 0.9em;">Section Name</label>
+                <input type="text" name="section_name" placeholder="e.g., Shopping, Travel, Health" maxlength="50" required 
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; box-sizing: border-box;">
+            </div>
+            <button type="submit" style="padding: 10px 20px; background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.3s; white-space: nowrap;">
+                + New Section
+            </button>
+        </form>
+    </div>
+
+    <!-- Add New Note Form -->
+    <div style="background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+        <h3 style="margin-top: 0; color: #333;">Add New Note</h3>
+        <form method="POST" action="{{ url_for('add_note') }}" style="display: flex; flex-direction: column; gap: 15px;">
+            <input type="text" name="title" placeholder="Note Title" maxlength="100" required 
+                   style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em;">
+            
+            <textarea name="content" placeholder="Note Content" required 
+                      style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; min-height: 100px; font-family: inherit; resize: vertical;"></textarea>
+            
+            <select name="category" required 
+                    style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em;">
+                <option value="">Select Section...</option>
+                {% for cat in all_categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit" style="padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.3s;">
+                + Add Note
+            </button>
+        </form>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-container" style="margin-bottom: 30px;">
+        <div class="tabs-nav" style="display: flex; gap: 10px; border-bottom: 2px solid #eee; flex-wrap: wrap; margin-bottom: 20px;">
+            {% if all_categories %}
+                {% for category in all_categories %}
+                <button class="tab-btn" data-category="{{ category }}" 
+                        style="padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 0.95em; color: #999; border-bottom: 3px solid transparent; transition: all 0.3s; {% if loop.first %}color: #667eea; border-bottom-color: #667eea;{% endif %}"
+                        onclick="showTab(this)">
+                    {{ category }} <span style="font-size: 0.85em; opacity: 0.7;">({{ notes_by_category.get(category, []) | length }})</span>
+                </button>
+                {% endfor %}
+            {% else %}
+                <p style="color: #999; padding: 20px 0;">No sections yet. Create a section above to start!</p>
+            {% endif %}
+        </div>
+
+        <!-- Tabs Content -->
+        {% for category in all_categories %}
+        <div class="tab-content" data-category="{{ category }}" style="display: {% if loop.first %}block{% else %}none{% endif %};">
+            {% set notes = notes_by_category.get(category, []) %}
+            {% if notes %}
+                <div style="display: grid; gap: 15px;">
+                    {% for note in notes %}
+                    <div style="background: white; border: 1px solid #eee; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: box-shadow 0.3s;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 5px 0; color: #333; font-size: 1.1em; word-break: break-word;">{{ note.title }}</h3>
+                                <p style="margin: 0; color: #999; font-size: 0.85em;">Created: {{ note.created_at }}</p>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-shrink: 0; margin-left: 15px;">
+                                <a href="{{ url_for('edit_note', note_id=note.id) }}" 
+                                   style="padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 5px; white-space: nowrap;"
+                                   onmouseover="this.style.background='#5568d3'" 
+                                   onmouseout="this.style.background='#667eea'">
+                                    ✏️ Edit
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_note', note_id=note.id) }}" style="display: inline;" 
+                                      onsubmit="return confirm('Are you sure you want to delete this note?');">
+                                    <button type="submit" style="padding: 8px 16px; background: #ff6b6b; color: white; border: none; border-radius: 4px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.3s; white-space: nowrap;"
+                                            onmouseover="this.style.background='#ee5a52'" 
+                                            onmouseout="this.style.background='#ff6b6b'">
+                                        🗑️ Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; border-left: 3px solid #667eea; margin-top: 12px;">
+                            <p style="margin: 0; color: #555; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; font-size: 0.95em;">{{ note.content }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: #999; text-align: center; padding: 40px 20px; font-style: italic;">No notes in this section yet. Create a note above!</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function showTab(btnElement) {
+    const category = btnElement.dataset.category;
+    
+    // Update button styles
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.style.color = '#999';
+        btn.style.borderBottomColor = 'transparent';
+    });
+    btnElement.style.color = '#667eea';
+    btnElement.style.borderBottomColor = '#667eea';
+    
+    // Update content visibility
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = content.dataset.category === category ? 'block' : 'none';
+    });
+}
+</script>
+
+<style>
+.tab-btn:hover {
+    color: #667eea !important;
+    opacity: 0.8;
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Auth System{% endblock %}
+
+{% block content %}
+    <div class="nav-bar">
+        <h1>Welcome!</h1>
+        <div>
+            <a href="{{ url_for('notes') }}">Notes</a> | 
+            <a href="{{ url_for('profile') }}">Profile</a> | 
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
+
+    <div class="user-info">
+        <p><strong>Welcome, {{ full_name }}!</strong></p>
+        <p>Username: <strong>{{ username }}</strong></p>
+        <p>You have successfully logged in to the authentication system.</p>
+    </div>
+
+    <div class="info-box">
+        <h3 style="color: #667eea; margin-bottom: 10px;">✨ Features</h3>
+        <p>Explore the available features of your authenticated account:</p>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+            <li><strong>Profile:</strong> View and manage your account information</li>
+            <li><strong>Notes:</strong> Create and organize notes with categories and tabs</li>
+            <li><strong>Security:</strong> Your password is securely hashed and stored</li>
+        </ul>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+        <button onclick="location.href='{{ url_for('notes') }}'" 
+                style="padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.3s; font-size: 1em;">
+            📝 My Notes
+        </button>
+        <button onclick="location.href='{{ url_for('profile') }}'" 
+                style="padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.3s; font-size: 1em;">
+            👤 View Profile
+        </button>
+    </div>
+{% endblock %}
